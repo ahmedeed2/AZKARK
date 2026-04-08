@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>أذكاري - تطبيق إسلامي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f1eb;
+  --fg:#0f2d1a;
+  --border:#cde0d1;
+  --card:#ffffff;
+  --card-fg:#0f2d1a;
+  --primary:#2a7a4a;
+  --primary-fg:#ffffff;
+  --secondary:#f0ebe0;
+  --muted:#e8f0ea;
+  --muted-fg:#5a7a62;
+  --accent:#c8881a;
+  --accent-fg:#ffffff;
+  --red:#c0392b;
+  --orange:#d35400;
+  --yellow:#d4a017;
+  --radius:0.75rem;
+  --font:'Amiri','Noto Naskh Arabic','Traditional Arabic',serif;
+}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);direction:rtl;min-height:100vh;padding-bottom:90px}
+button{cursor:pointer;font-family:var(--font);border:none;background:none}
+/* Layout */
+.page{display:none;max-width:660px;margin:0 auto;padding:1.5rem 1rem}
+.page.active{display:block}
+/* Nav */
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);z-index:100;padding-bottom:env(safe-area-inset-bottom,0)}
+.nav-inner{max-width:660px;margin:0 auto;display:flex}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:.6rem .25rem .5rem;gap:.2rem;color:var(--muted-fg);transition:color .2s;position:relative;background:none;border:none;font-family:var(--font)}
+.nav-btn.active{color:var(--primary)}
+.nav-btn .nav-icon{font-size:1.4rem;line-height:1}
+.nav-btn .nav-label{font-size:.72rem;font-weight:700}
+.nav-btn.active::after{content:'';position:absolute;bottom:0;width:2rem;height:3px;background:var(--primary);border-radius:3px 3px 0 0}
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:.9rem}
+.card-hover{transition:transform .25s,box-shadow .25s}
+.card-hover:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.09)}
+/* Gradient */
+.grad{background:linear-gradient(135deg,#2a7a4a 0%,#1e5c35 50%,#c8881a 100%);color:#fff}
+/* Heading */
+.page-title{font-size:1.5rem;font-weight:700;margin-bottom:.2rem}
+.page-sub{font-size:.85rem;color:var(--muted-fg);margin-bottom:1.2rem}
+/* Tabs */
+.tabs{display:flex;gap:.5rem;margin-bottom:1.2rem}
+.tab-btn{flex:1;padding:.8rem;border-radius:var(--radius);font-weight:700;font-size:.9rem;border:1px solid var(--border);background:var(--card);color:var(--fg);transition:all .2s}
+.tab-btn.active{background:linear-gradient(135deg,#2a7a4a,#1e5c35);color:#fff;border-color:transparent;box-shadow:0 4px 14px rgba(42,122,74,.3)}
+/* Dhikr card */
+.dhikr-card{background:var(--card);border:1px solid var(--border);border-radius:1rem;padding:1.1rem 1.1rem 1.1rem 1.4rem;margin-bottom:.85rem;position:relative;overflow:hidden;transition:opacity .3s}
+.dhikr-card::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%;background:linear-gradient(180deg,var(--primary),var(--accent))}
+.dhikr-card.done{opacity:.55;background:var(--muted)}
+.dhikr-body{display:flex;gap:.8rem;align-items:flex-start}
+.dhikr-text{flex:1}
+.dhikr-source{font-size:.75rem;color:var(--accent);font-weight:700;margin-bottom:.4rem;display:block}
+.dhikr-arabic{font-family:var(--font);line-height:2.1;font-size:1.05rem;color:var(--fg);white-space:pre-line}
+.dhikr-reward{margin-top:.7rem;padding:.5rem .7rem;border-radius:.6rem;background:rgba(42,122,74,.07);font-size:.78rem;color:var(--muted-fg);line-height:1.7}
+.dhikr-reward span{color:var(--accent);font-weight:700}
+.dhikr-ctrl{display:flex;flex-direction:column;align-items:center;gap:.4rem;min-width:65px}
+.count-btn{width:52px;height:52px;border-radius:50%;background:var(--primary);color:#fff;font-size:1.4rem;display:flex;align-items:center;justify-content:center;transition:transform .15s,background .2s;flex-shrink:0}
+.count-btn:active{transform:scale(.9)}
+.count-btn:disabled{background:var(--muted);color:var(--muted-fg);cursor:not-allowed}
+.count-num{font-size:1.1rem;font-weight:700;color:var(--primary)}
+.count-target{font-size:.72rem;color:var(--muted-fg)}
+.prog-bar{height:5px;background:var(--muted);border-radius:100px;overflow:hidden;margin-top:.7rem}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:100px;transition:width .4s ease}
+/* Hero */
+.hero{border-radius:1.5rem;padding:1.5rem;margin-bottom:1.2rem;position:relative;overflow:hidden}
+.hero-bg-text{position:absolute;top:.5rem;left:1rem;font-size:6rem;opacity:.08;font-weight:700;line-height:1;pointer-events:none;color:#fff}
+.hero-content{position:relative}
+.hero-greeting{font-size:1.6rem;font-weight:700;margin-bottom:.1rem}
+.hero-date{font-size:.8rem;opacity:.75;margin-bottom:1rem}
+.hero-points-box{background:rgba(255,255,255,.15);border-radius:1rem;padding:1rem;text-align:center}
+.hero-points-num{font-size:2.8rem;font-weight:700}
+.hero-points-lbl{font-size:.8rem;opacity:.8}
+.hero-today{font-size:.72rem;opacity:.65;margin-top:.2rem}
+/* Bismillah */
+.bismillah-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem;text-align:center;margin-bottom:1.2rem}
+.bismillah-text{font-size:1.5rem;line-height:2;color:var(--fg)}
+.bismillah-sub{font-size:.75rem;color:var(--muted-fg);margin-top:.3rem}
+/* Goals grid */
+.goals-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:1.2rem}
+.goal-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem;cursor:pointer;transition:all .2s;text-align:right}
+.goal-card:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.goal-card.done-card{border-color:rgba(42,122,74,.4);background:rgba(42,122,74,.04)}
+.goal-emoji{font-size:1.3rem;margin-bottom:.4rem}
+.goal-title{font-size:.85rem;font-weight:700;color:var(--fg);margin-bottom:.15rem}
+.goal-meta{font-size:.72rem;color:var(--muted-fg);margin-bottom:.5rem}
+.goal-done-badge{font-size:.7rem;font-weight:700;color:var(--primary)}
+/* Sections list */
+.sections-list{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.2rem}
+.section-btn{display:flex;align-items:center;gap:.9rem;padding:.95rem 1rem;border-radius:var(--radius);border:1px solid var(--border);text-align:right;transition:transform .2s;width:100%;background:var(--card)}
+.section-btn:hover{transform:translateY(-1px)}
+.section-emoji{font-size:1.7rem;width:2.8rem;height:2.8rem;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--muted);flex-shrink:0}
+.section-info{flex:1}
+.section-title{font-size:.95rem;font-weight:700;color:var(--fg)}
+.section-sub{font-size:.75rem;color:var(--muted-fg);margin-top:.1rem}
+.section-arrow{color:var(--muted-fg);font-size:1.2rem}
+/* Hadith */
+.hadith-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem;text-align:center}
+.hadith-label{font-size:.72rem;color:var(--muted-fg);margin-bottom:.5rem}
+.hadith-text{font-size:1rem;line-height:2;color:var(--fg)}
+.hadith-source{font-size:.72rem;color:var(--muted-fg);margin-top:.4rem}
+/* Summary tab */
+.tab-summary{display:flex;gap:.6rem;margin-bottom:.9rem}
+.summary-card{flex:1;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:.8rem;text-align:center}
+.summary-num{font-size:1.6rem;font-weight:700;color:var(--primary)}
+.summary-lbl{font-size:.72rem;color:var(--muted-fg);margin-top:.1rem}
+/* Progress tabs */
+.prog-tabs-summary{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:.9rem}
+.prog-tabs-title{font-weight:700;margin-bottom:.8rem;font-size:.9rem}
+.prog-row{display:flex;align-items:center;gap:.7rem;margin-bottom:.6rem}
+.prog-row-label{font-size:.8rem;color:var(--fg);width:7rem;flex-shrink:0}
+.prog-row-bar{flex:1;height:6px;background:var(--muted);border-radius:100px;overflow:hidden}
+.prog-row-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:100px;transition:width .4s}
+.prog-row-meta{font-size:.72rem;color:var(--muted-fg);width:3rem;text-align:left;flex-shrink:0}
+/* Level badge */
+.level-box{border-radius:1.5rem;padding:1.4rem;text-align:center;margin-bottom:.9rem;position:relative;overflow:hidden}
+.level-deco{position:absolute;top:.5rem;right:.8rem;font-size:5rem;opacity:.08;pointer-events:none;color:#fff}
+.level-deco2{position:absolute;bottom:.5rem;left:.8rem;font-size:3.5rem;opacity:.07;pointer-events:none;color:#fff}
+.level-emoji{font-size:2.5rem;margin-bottom:.3rem}
+.level-pts{font-size:2.8rem;font-weight:700}
+.level-pts-lbl{font-size:.8rem;opacity:.8}
+.level-name{font-size:1.1rem;font-weight:700;margin-top:.5rem}
+.level-prog-wrap{margin-top:.7rem}
+.level-prog-bar{height:7px;background:rgba(255,255,255,.3);border-radius:100px;overflow:hidden}
+.level-prog-fill{height:100%;background:#fff;border-radius:100px;transition:width .5s}
+.level-next{font-size:.72rem;opacity:.7;margin-top:.3rem}
+/* Prayers grid */
+.prayers-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:.9rem}
+.prayers-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem}
+.prayers-title{font-weight:700;font-size:.9rem}
+.pts-badge{display:inline-flex;align-items:center;background:linear-gradient(135deg,#c8881a,#a06a12);color:#fff;padding:.2rem .7rem;border-radius:100px;font-size:.75rem;font-weight:700}
+.prayer-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.prayer-btn{display:flex;align-items:center;gap:.6rem;padding:.7rem;border-radius:.7rem;border:1px solid var(--border);text-align:right;transition:all .2s;background:none;width:100%;font-family:var(--font)}
+.prayer-btn.checked{background:rgba(42,122,74,.07);border-color:rgba(42,122,74,.35);color:var(--primary)}
+.prayer-icon-wrap{width:2.1rem;height:2.1rem;border-radius:50%;background:var(--muted);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;transition:background .2s}
+.prayer-btn.checked .prayer-icon-wrap{background:var(--primary);color:#fff}
+.prayer-name{font-size:.82rem;font-weight:700}
+.prayer-time{font-size:.68rem;color:var(--muted-fg)}
+/* Quran card */
+.quran-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:.9rem}
+.quran-inner{display:flex;align-items:center;gap:1rem}
+.quran-num{font-size:2rem;font-weight:700;color:var(--primary)}
+.quran-lbl{font-size:.75rem;color:var(--muted-fg)}
+.add-page-btn{margin-right:auto;padding:.7rem 1.3rem;border-radius:.8rem;background:var(--primary);color:#fff;font-family:var(--font);font-weight:700;font-size:.85rem;transition:transform .15s}
+.add-page-btn:active{transform:scale(.95)}
+.quran-done-msg{margin-top:.6rem;padding:.45rem;border-radius:.6rem;text-align:center;font-size:.75rem;font-weight:700;background:rgba(42,122,74,.08);color:var(--primary)}
+/* Points guide */
+.guide-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem}
+.guide-title{font-weight:700;margin-bottom:.7rem;font-size:.9rem}
+.guide-row{display:flex;align-items:center;justify-content:space-between;padding:.45rem .6rem;border-radius:.5rem;background:rgba(0,0,0,.02);margin-bottom:.3rem}
+.guide-left{display:flex;align-items:center;gap:.5rem;font-size:.8rem}
+/* Sins */
+.filter-bar{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.9rem}
+.filter-btn{padding:.35rem .8rem;border-radius:100px;font-size:.75rem;font-weight:700;border:none;background:var(--muted);color:var(--muted-fg);transition:all .2s;font-family:var(--font)}
+.filter-btn.active{background:var(--primary);color:#fff}
+.sins-list{display:flex;flex-direction:column;gap:.4rem}
+.sin-item{display:flex;align-items:center;gap:.7rem;padding:.65rem .8rem;border-radius:.75rem;border:1px solid;transition:transform .15s}
+.sin-item:hover{transform:translateX(-2px)}
+.sin-item.critical{background:rgba(192,57,43,.05);border-color:rgba(192,57,43,.2)}
+.sin-item.high{background:rgba(211,84,0,.05);border-color:rgba(211,84,0,.2)}
+.sin-item.medium{background:rgba(212,160,23,.05);border-color:rgba(212,160,23,.18)}
+.sin-num{width:1.8rem;height:1.8rem;border-radius:50%;background:rgba(255,255,255,.8);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:var(--muted-fg);flex-shrink:0}
+.sin-name{flex:1;font-size:.82rem;font-weight:600;color:var(--fg)}
+.sin-sev{font-size:.65rem;font-weight:700;flex-shrink:0}
+.sin-sev.critical{color:var(--red)}
+.sin-sev.high{color:var(--orange)}
+.sin-sev.medium{color:var(--yellow)}
+.shaytan-note{margin-top:.9rem;padding:.9rem;border-radius:var(--radius);background:rgba(200,136,26,.09);border:1px solid rgba(200,136,26,.25);text-align:center;font-size:.8rem;font-weight:700;color:var(--accent)}
+.shaytan-sub{font-size:.72rem;color:var(--muted-fg);margin-top:.25rem}
+/* Solutions */
+.sol-card{display:flex;align-items:center;gap:.9rem;padding:1rem;border-radius:var(--radius);border:1px solid;border-color:rgba(42,122,74,.25);background:rgba(42,122,74,.04);margin-bottom:.55rem;transition:transform .2s}
+.sol-card:hover{transform:translateX(-2px)}
+.sol-icon{width:2.8rem;height:2.8rem;border-radius:50%;background:rgba(42,122,74,.1);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+.sol-text{font-size:.85rem;font-weight:600;color:var(--fg);line-height:1.6}
+.tawba-steps{margin-top:1rem}
+.tawba-title{font-size:1rem;font-weight:700;margin-bottom:.6rem}
+.tawba-step{display:flex;align-items:center;gap:.8rem;padding:.65rem .8rem;border-radius:.7rem;background:var(--card);border:1px solid var(--border);margin-bottom:.4rem}
+.step-num{width:2rem;height:2rem;border-radius:50%;background:linear-gradient(135deg,#2a7a4a,#1e5c35);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0}
+.step-text{font-size:.82rem;font-weight:600;color:var(--fg)}
+.aya-box{margin-top:.9rem;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;text-align:center}
+.aya-text{font-size:.95rem;line-height:2;color:var(--fg);font-weight:600}
+.aya-ref{font-size:.72rem;color:var(--muted-fg);margin-top:.3rem}
+/* Reset link */
+.reset-link{font-size:.75rem;color:var(--muted-fg);text-decoration:underline;background:none;border:none;font-family:var(--font);cursor:pointer}
+/* Adhkar top row */
+.adhkar-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem}
+.adhkar-meta-text{font-size:.82rem;color:var(--muted-fg)}
+.done-badge{display:inline-flex;align-items:center;gap:.3rem;background:linear-gradient(135deg,#c8881a,#a06a12);color:#fff;padding:.2rem .7rem;border-radius:100px;font-size:.75rem;font-weight:700}
+/* Completed overlay */
+.completed-msg{display:none;text-align:center;padding:1.5rem;border-radius:var(--radius);background:rgba(42,122,74,.08);border:1px dashed rgba(42,122,74,.3);margin-bottom:1rem}
+.completed-msg.show{display:block}
+.completed-emoji{font-size:2.5rem;margin-bottom:.5rem}
+.completed-title{font-size:1.1rem;font-weight:700;color:var(--primary)}
+.completed-sub{font-size:.8rem;color:var(--muted-fg);margin-top:.3rem}
+</style>
+</head>
+<body>
+
+<!-- Pages -->
+<div id="page-home" class="page active"></div>
+<div id="page-adhkar" class="page"></div>
+<div id="page-sins" class="page"></div>
+<div id="page-points" class="page"></div>
+
+<!-- Bottom Nav -->
+<nav>
+  <div class="nav-inner">
+    <button class="nav-btn active" data-page="home" onclick="goPage('home')">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">الرئيسية</span>
+    </button>
+    <button class="nav-btn" data-page="adhkar" onclick="goPage('adhkar')">
+      <span class="nav-icon">📿</span>
+      <span class="nav-label">الأذكار</span>
+    </button>
+    <button class="nav-btn" data-page="sins" onclick="goPage('sins')">
+      <span class="nav-icon">⚠️</span>
+      <span class="nav-label">الكبائر</span>
+    </button>
+    <button class="nav-btn" data-page="points" onclick="goPage('points')">
+      <span class="nav-icon">⭐</span>
+      <span class="nav-label">نقاطي</span>
+    </button>
+  </div>
+</nav>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const MORNING_ADHKAR = [
+  {id:'m1',arabic:'أَعُوذُ بِاللهِ مِنْ الشَّيْطَانِ الرَّجِيمِ\n\nاللّهُ لاَ إِلَـهَ إِلاَّ هُوَ الْحَيُّ الْقَيُّومُ لاَ تَأْخُذُهُ سِنَةٌ وَلاَ نَوْمٌ لَّهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الأَرْضِ مَن ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلاَّ بِإِذْنِهِ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ وَلاَ يُحِيطُونَ بِشَيْءٍ مِّنْ عِلْمِهِ إِلاَّ بِمَا شَاء وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالأَرْضَ وَلاَ يَؤُودُهُ حِفْظُهُمَا وَهُوَ الْعَلِيُّ الْعَظِيمُ',count:1,source:'آية الكرسى - البقرة 255',reward:'من قالها حين يصبح أجير من الجن حتى يمسى'},
+  {id:'m2',arabic:'بِسْمِ اللهِ الرَّحْمنِ الرَّحِيم\n\nقُلْ هُوَ ٱللَّهُ أَحَدٌ، ٱللَّهُ ٱلصَّمَدُ، لَمْ يَلِدْ وَلَمْ يُولَدْ، وَلَمْ يَكُن لَّهُۥ كُفُوًا أَحَدٌۢ',count:3,source:'سورة الإخلاص',reward:'من قالها حين يصبح وحين يمسى كفته من كل شىء'},
+  {id:'m3',arabic:'بِسْمِ اللهِ الرَّحْمنِ الرَّحِيم\n\nقُلْ أَعُوذُ بِرَبِّ ٱلْفَلَقِ، مِن شَرِّ مَا خَلَقَ، وَمِن شَرِّ غَاسِقٍ إِذَا وَقَبَ، وَمِن شَرِّ ٱلنَّفَّٰثَٰتِ فِى ٱلْعُقَدِ، وَمِن شَرِّ حَاسِدٍ إِذَا حَسَدَ',count:3,source:'سورة الفلق'},
+  {id:'m4',arabic:'بِسْمِ اللهِ الرَّحْمنِ الرَّحِيم\n\nقُلْ أَعُوذُ بِرَبِّ ٱلنَّاسِ، مَلِكِ ٱلنَّاسِ، إِلَٰهِ ٱلنَّاسِ، مِن شَرِّ ٱلْوَسْوَاسِ ٱلْخَنَّاسِ، ٱلَّذِى يُوَسْوِسُ فِى صُدُورِ ٱلنَّاسِ، مِنَ ٱلْجِنَّةِ وَٱلنَّاسِ',count:3,source:'سورة الناس'},
+  {id:'m5',arabic:'أَصْـبَحْنا وَأَصْـبَحَ المُـلْكُ لله وَالحَمدُ لله، لا إلهَ إلاّ اللّهُ وَحدَهُ لا شَريكَ لهُ، لهُ المُـلكُ ولهُ الحَمْـد، وهُوَ على كلّ شَيءٍ قدير، رَبِّ أسْـأَلُـكَ خَـيرَ ما في هـذا اليوم وَخَـيرَ ما بَعْـدَه، وَأَعـوذُ بِكَ مِنْ شَـرِّ ما في هـذا اليوم وَشَرِّ ما بَعْـدَه، رَبِّ أَعـوذُبِكَ مِنَ الْكَسَـلِ وَسـوءِ الْكِـبَر، رَبِّ أَعـوذُ بِكَ مِنْ عَـذابٍ في النّـارِ وَعَـذابٍ في القَـبْر',count:1},
+  {id:'m6',arabic:'اللّهـمَّ أَنْتَ رَبِّـي لا إلهَ إلاّ أَنْتَ، خَلَقْتَنـي وَأَنا عَبْـدُك، وَأَنا عَلـى عَهْـدِكَ وَوَعْـدِكَ ما اسْتَـطَعْـت، أَعـوذُبِكَ مِنْ شَـرِّ ما صَنَـعْت، أَبـوءُ لَـكَ بِنِعْـمَتِـكَ عَلَـيَّ وَأَبـوءُ بِذَنْـبي فَاغْفـِرْ لي فَإِنَّـهُ لا يَغْـفِرُ الذُّنـوبَ إِلاّ أَنْتَ',count:1,reward:'من قالها موقناً بها حين يمسى ومات من ليلته دخل الجنة وكذلك حين يصبح'},
+  {id:'m7',arabic:'رَضيـتُ بِاللهِ رَبَّـاً وَبِالإسْلامِ ديـناً وَبِمُحَـمَّدٍ صلى الله عليه وسلم نَبِيّـاً',count:3,reward:'من قالها حين يصبح وحين يمسى كان حقا على الله أن يرضيه يوم القيامة'},
+  {id:'m8',arabic:'اللّهُـمَّ إِنِّـي أَصْبَـحْتُ أُشْـهِدُك، وَأُشْـهِدُ حَمَلَـةَ عَـرْشِـك، وَمَلَائِكَتَكَ، وَجَمـيعَ خَلْـقِك، أَنَّـكَ أَنْـتَ اللهُ لا إلهَ إلاّ أَنْـتَ وَحْـدَكَ لا شَريكَ لَـك، وَأَنَّ مُحَمّـداً عَبْـدُكَ وَرَسـولُـك',count:4,reward:'من قالها أعتقه الله من النار'},
+  {id:'m9',arabic:'اللّهُـمَّ ما أَصْبَـَحَ بي مِـنْ نِعْـمَةٍ أَو بِأَحَـدٍ مِـنْ خَلْـقِك، فَمِـنْكَ وَحْـدَكَ لا شريكَ لَـك، فَلَـكَ الْحَمْـدُ وَلَـكَ الشُّكْـر',count:1,reward:'من قالها حين يصبح أدى شكر يومه'},
+  {id:'m10',arabic:'حَسْبِـيَ اللّهُ لا إلهَ إلاّ هُوَ عَلَـيهِ تَوَكَّـلتُ وَهُوَ رَبُّ العَرْشِ العَظـيم',count:7,reward:'من قالها كفاه الله ما أهمه من أمر الدنيا والأخرة'},
+  {id:'m11',arabic:'بِسـمِ اللهِ الذي لا يَضُـرُّ مَعَ اسمِـهِ شَيءٌ في الأرْضِ وَلا في السّمـاءِ وَهـوَ السّمـيعُ العَلـيم',count:3,reward:'لم يضره من الله شيء'},
+  {id:'m12',arabic:'اللّهُـمَّ بِكَ أَصْـبَحْنا وَبِكَ أَمْسَـينا، وَبِكَ نَحْـيا وَبِكَ نَمُـوتُ وَإِلَـيْكَ النُّـشُور',count:1},
+  {id:'m13',arabic:'أَصْبَـحْـنا عَلَى فِطْرَةِ الإسْلاَمِ، وَعَلَى كَلِمَةِ الإِخْلاَصِ، وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ، وَعَلَى مِلَّةِ أَبِينَا إبْرَاهِيمَ حَنِيفاً مُسْلِماً وَمَا كَانَ مِنَ المُشْرِكِينَ',count:1},
+  {id:'m14',arabic:'سُبْحـانَ اللهِ وَبِحَمْـدِهِ عَدَدَ خَلْـقِه، وَرِضـا نَفْسِـه، وَزِنَـةَ عَـرْشِـه، وَمِـدادَ كَلِمـاتِـه',count:3},
+  {id:'m15',arabic:'اللّهُـمَّ عافِـني في بَدَنـي، اللّهُـمَّ عافِـني في سَمْـعي، اللّهُـمَّ عافِـني في بَصَـري، لا إلهَ إلاّ أَنْـتَ',count:3},
+  {id:'m16',arabic:'اللّهُـمَّ إِنّـي أَعـوذُ بِكَ مِنَ الْكُـفر، وَالفَـقْر، وَأَعـوذُ بِكَ مِنْ عَذابِ القَـبْر، لا إلهَ إلاّ أَنْـتَ',count:3},
+  {id:'m17',arabic:'اللّهُـمَّ إِنِّـي أسْـأَلُـكَ العَـفْوَ وَالعـافِـيةَ في الدُّنْـيا وَالآخِـرَة، اللّهُـمَّ إِنِّـي أسْـأَلُـكَ العَـفْوَ وَالعـافِـيةَ في ديني وَدُنْـيايَ وَأهْـلي وَمالـي، اللّهُـمَّ اسْتُـرْ عـوْراتي وَآمِـنْ رَوْعاتـي، اللّهُـمَّ احْفَظْـني مِن بَـينِ يَدَيَّ وَمِن خَلْفـي وَعَن يَمـيني وَعَن شِمـالي، وَمِن فَوْقـي، وَأَعـوذُ بِعَظَمَـتِكَ أَن أُغْـتالَ مِن تَحْتـي',count:1},
+  {id:'m18',arabic:'يَا حَيُّ يَا قيُّومُ بِرَحْمَتِكَ أسْتَغِيثُ أصْلِحْ لِي شَأنِي كُلَّهُ وَلاَ تَكِلْنِي إلَى نَفْسِي طَـرْفَةَ عَيْنٍ',count:3},
+  {id:'m19',arabic:'أَصْبَـحْـنا وَأَصْبَـحْ المُـلكُ للهِ رَبِّ العـالَمـين، اللّهُـمَّ إِنِّـي أسْـأَلُـكَ خَـيْرَ هـذا الـيَوْم، فَـتْحَهُ، وَنَصْـرَهُ، وَنـورَهُ وَبَـرَكَتَـهُ، وَهُـداهُ، وَأَعـوذُ بِـكَ مِـنْ شَـرِّ ما فـيهِ وَشَـرِّ ما بَعْـدَه',count:1},
+  {id:'m20',arabic:'اللّهُـمَّ عالِـمَ الغَـيْبِ وَالشّـهادَةِ فاطِـرَ السّماواتِ وَالأرْضِ رَبَّ كـلِّ شَـيءٍ وَمَليـكَه، أَشْهَـدُ أَنْ لا إِلـهَ إِلاّ أَنْت، أَعـوذُ بِكَ مِن شَـرِّ نَفْسـي وَمِن شَـرِّ الشَّيْـطانِ وَشِرْكِهِ، وَأَنْ أَقْتَـرِفَ عَلـى نَفْسـي سوءاً أَوْ أَجُـرَّهُ إِلـى مُسْـلِم',count:1},
+  {id:'m21',arabic:'أَعـوذُ بِكَلِمـاتِ اللّهِ التّـامّـاتِ مِنْ شَـرِّ ما خَلَـق',count:3},
+  {id:'m22',arabic:'اللَّهُمَّ صَلِّ وَسَلِّمْ وَبَارِكْ على نَبِيِّنَا مُحمَّد',count:10,reward:'من صلى عليَّ حين يصبح وحين يمسى أدركته شفاعتي يوم القيامة'},
+  {id:'m23',arabic:'اللَّهُمَّ إِنَّا نَعُوذُ بِكَ مِنْ أَنْ نُشْرِكَ بِكَ شَيْئًا نَعْلَمُهُ، وَنَسْتَغْفِرُكَ لِمَا لَا نَعْلَمُهُ',count:3},
+  {id:'m24',arabic:'اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ الْهَمِّ وَالْحَزَنِ، وَأَعُوذُ بِكَ مِنْ الْعَجْزِ وَالْكَسَلِ، وَأَعُوذُ بِكَ مِنْ الْجُبْنِ وَالْبُخْلِ، وَأَعُوذُ بِكَ مِنْ غَلَبَةِ الدَّيْنِ، وَقَهْرِ الرِّجَالِ',count:3},
+  {id:'m25',arabic:'أسْتَغْفِرُ اللهَ العَظِيمَ الَّذِي لاَ إلَهَ إلاَّ هُوَ، الحَيُّ القَيُّومُ، وَأتُوبُ إلَيهِ',count:3},
+  {id:'m26',arabic:'يَا رَبِّ، لَكَ الْحَمْدُ كَمَا يَنْبَغِي لِجَلَالِ وَجْهِكَ، وَلِعَظِيمِ سُلْطَانِكَ',count:3},
+  {id:'m27',arabic:'اللَّهُمَّ إِنِّي أَسْأَلُكَ عِلْمًا نَافِعًا، وَرِزْقًا طَيِّبًا، وَعَمَلًا مُتَقَبَّلًا',count:1},
+  {id:'m28',arabic:'اللَّهُمَّ أَنْتَ رَبِّي لا إِلَهَ إِلا أَنْتَ، عَلَيْكَ تَوَكَّلْتُ، وَأَنْتَ رَبُّ الْعَرْشِ الْعَظِيمِ، مَا شَاءَ اللَّهُ كَانَ، وَمَا لَمْ يَشَأْ لَمْ يَكُنْ، وَلا حَوْلَ وَلا قُوَّةَ إِلا بِاللَّهِ الْعَلِيِّ الْعَظِيمِ، أَعْلَمُ أَنَّ اللَّهَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، وَأَنَّ اللَّهَ قَدْ أَحَاطَ بِكُلِّ شَيْءٍ عِلْمًا، اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ شَرِّ نَفْسِي، وَمِنْ شَرِّ كُلِّ دَابَّةٍ أَنْتَ آخِذٌ بِنَاصِيَتِهَا، إِنَّ رَبِّي عَلَى صِرَاطٍ مُسْتَقِيمٍ',count:1,reward:'ذكر طيب'},
+  {id:'m29',arabic:'لَا إلَه إلّا اللهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءِ قَدِيرِ',count:100,reward:'كانت له عدل عشر رقاب، وكتبت له مئة حسنة، ومحيت عنه مئة سيئة'},
+  {id:'m30',arabic:'سُبْحـانَ اللهِ وَبِحَمْـدِهِ',count:100,reward:'حُطَّتْ خَطَايَاهُ وَإِنْ كَانَتْ مِثْلَ زَبَدِ الْبَحْرِ'},
+  {id:'m31',arabic:'أسْتَغْفِرُ اللهَ وَأتُوبُ إلَيْهِ',count:100,reward:'مائة حسنة، ومُحيت عنه مائة سيئة، وكانت له حرزاً من الشيطان'}
+];
+
+const EVENING_ADHKAR = [
+  {id:'e1',arabic:'أَعُوذُ بِاللهِ مِنْ الشَّيْطَانِ الرَّجِيمِ\n\nاللّهُ لاَ إِلَـهَ إِلاَّ هُوَ الْحَيُّ الْقَيُّومُ لاَ تَأْخُذُهُ سِنَةٌ وَلاَ نَوْمٌ لَّهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الأَرْضِ مَن ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلاَّ بِإِذْنِهِ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ وَلاَ يُحِيطُونَ بِشَيْءٍ مِّنْ عِلْمِهِ إِلاَّ بِمَا شَاء وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالأَرْضَ وَلاَ يَؤُودُهُ حِفْظُهُمَا وَهُوَ الْعَلِيُّ الْعَظِيمُ',count:1,source:'آية الكرسى - البقرة 255',reward:'من قالها حين يمسى أجير من الجن حتى يصبح'},
+  {id:'e2',arabic:'أَعُوذُ بِاللهِ مِنْ الشَّيْطَانِ الرَّجِيمِ\n\nآمَنَ الرَّسُولُ بِمَا أُنْزِلَ إِلَيْهِ مِنْ رَبِّهِ وَالْمُؤْمِنُونَ ۚ كُلٌّ آمَنَ بِاللَّهِ وَمَلَائِكَتِهِ وَكُتُبِهِ وَرُسُلِهِ لَا نُفَرِّقُ بَيْنَ أَحَدٍ مِنْ رُسُلِهِ ۚ وَقَالُوا سَمِعْنَا وَأَطَعْنَا ۖ غُفْرَانَكَ رَبَّنَا وَإِلَيْكَ الْمَصِيرُ. لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا لَهَا مَا كَسَبَتْ وَعَلَيْهَا مَا اكْتَسَبَتْ رَبَّنَا لَا تُؤَاخِذْنَا إِنْ نَّسِينَآ أَوْ أَخْطَأْنَا رَبَّنَا وَلَا تَحْمِلْ عَلَيْنَا إِصْرًا كَمَا حَمَلْتَهُ عَلَى الَّذِينَ مِنْ قَبْلِنَا رَبَّنَا وَلَا تُحَمِّلْنَا مَا لَا طَاقَةَ لَنَا بِهِ وَاعْفُ عَنَّا وَاغْفِرْ لَنَا وَارْحَمْنَا أَنْتَ مَوْلَانَا فَانْصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ',count:1,source:'البقرة 285-286',reward:'من قرأ آيتين من آخر سورة البقرة في ليلة كفتاه'},
+  {id:'e3',arabic:'بِسْمِ اللهِ الرَّحْمنِ الرَّحِيم\n\nقُلْ هُوَ ٱللَّهُ أَحَدٌ، ٱللَّهُ ٱلصَّمَدُ، لَمْ يَلِدْ وَلَمْ يُولَدْ، وَلَمْ يَكُن لَّهُۥ كُفُوًا أَحَدٌۢ',count:3,source:'سورة الإخلاص',reward:'من قالها حين يصبح وحين يمسى كفته من كل شىء'},
+  {id:'e4',arabic:'بِسْمِ اللهِ الرَّحْمنِ الرَّحِيم\n\nقُلْ أَعُوذُ بِرَبِّ ٱلْفَلَقِ، مِن شَرِّ مَا خَلَقَ، وَمِن شَرِّ غَاسِقٍ إِذَا وَقَبَ، وَمِن شَرِّ ٱلنَّفَّٰثَٰتِ فِى ٱلْعُقَدِ، وَمِن شَرِّ حَاسِدٍ إِذَا حَسَدَ',count:3,source:'سورة الفلق'},
+  {id:'e5',arabic:'بِسْمِ اللهِ الرَّحْمنِ الرَّحِيم\n\nقُلْ أَعُوذُ بِرَبِّ ٱلنَّاسِ، مَلِكِ ٱلنَّاسِ، إِلَٰهِ ٱلنَّاسِ، مِن شَرِّ ٱلْوَسْوَاسِ ٱلْخَنَّاسِ، ٱلَّذِى يُوَسْوِسُ فِى صُدُورِ ٱلنَّاسِ، مِنَ ٱلْجِنَّةِ وَٱلنَّاسِ',count:3,source:'سورة الناس'},
+  {id:'e6',arabic:'أَمْسَيْـنا وَأَمْسـى المـلكُ لله وَالحَمدُ لله، لا إلهَ إلاّ اللّهُ وَحدَهُ لا شَريكَ لهُ، لهُ المُـلكُ ولهُ الحَمْـد، وهُوَ على كلّ شَيءٍ قدير، رَبِّ أسْـأَلُـكَ خَـيرَ ما في هـذهِ اللَّـيْلَةِ وَخَـيرَ ما بَعْـدَهـا، وَأَعـوذُ بِكَ مِنْ شَـرِّ ما في هـذهِ اللَّـيْلةِ وَشَرِّ ما بَعْـدَهـا، رَبِّ أَعـوذُبِكَ مِنَ الْكَسَـلِ وَسـوءِ الْكِـبَر، رَبِّ أَعـوذُ بِكَ مِنْ عَـذابٍ في النّـارِ وَعَـذابٍ في القَـبْر',count:1},
+  {id:'e7',arabic:'اللّهـمَّ أَنْتَ رَبِّـي لا إلهَ إلاّ أَنْتَ، خَلَقْتَنـي وَأَنا عَبْـدُك، وَأَنا عَلـى عَهْـدِكَ وَوَعْـدِكَ ما اسْتَـطَعْـت، أَعـوذُبِكَ مِنْ شَـرِّ ما صَنَـعْت، أَبـوءُ لَـكَ بِنِعْـمَتِـكَ عَلَـيَّ وَأَبـوءُ بِذَنْـبي فَاغْفـِرْ لي فَإِنَّـهُ لا يَغْـفِرُ الذُّنـوبَ إِلاّ أَنْتَ',count:1,reward:'من قالها موقناً بها حين يمسى ومات من ليلته دخل الجنة'},
+  {id:'e8',arabic:'رَضيـتُ بِاللهِ رَبَّـاً وَبِالإسْلامِ ديـناً وَبِمُحَـمَّدٍ صلى الله عليه وسلم نَبِيّـاً',count:3,reward:'من قالها حين يصبح وحين يمسى كان حقا على الله أن يرضيه يوم القيامة'},
+  {id:'e9',arabic:'اللّهُـمَّ إِنِّـي أَمسيتُ أُشْـهِدُك، وَأُشْـهِدُ حَمَلَـةَ عَـرْشِـك، وَمَلَائِكَتَكَ، وَجَمـيعَ خَلْـقِك، أَنَّـكَ أَنْـتَ اللهُ لا إلهَ إلاّ أَنْـتَ وَحْـدَكَ لا شَريكَ لَـك، وَأَنَّ مُحَمّـداً عَبْـدُكَ وَرَسـولُـك',count:4,reward:'من قالها أعتقه الله من النار'},
+  {id:'e10',arabic:'اللّهُـمَّ ما أَمسى بي مِـنْ نِعْـمَةٍ أَو بِأَحَـدٍ مِـنْ خَلْـقِك، فَمِـنْكَ وَحْـدَكَ لا شريكَ لَـك، فَلَـكَ الْحَمْـدُ وَلَـكَ الشُّكْـر',count:1,reward:'من قالها حين يمسى أدى شكر يومه'},
+  {id:'e11',arabic:'حَسْبِـيَ اللّهُ لا إلهَ إلاّ هُوَ عَلَـيهِ تَوَكَّـلتُ وَهُوَ رَبُّ العَرْشِ العَظـيم',count:7,reward:'من قالها كفاه الله ما أهمه من أمر الدنيا والأخرة'},
+  {id:'e12',arabic:'بِسـمِ اللهِ الذي لا يَضُـرُّ مَعَ اسمِـهِ شَيءٌ في الأرْضِ وَلا في السّمـاءِ وَهـوَ السّمـيعُ العَلـيم',count:3,reward:'لم يضره من الله شيء'},
+  {id:'e13',arabic:'اللّهُـمَّ بِكَ أَمْسَـينا وَبِكَ أَصْـبَحْنا، وَبِكَ نَحْـيا وَبِكَ نَمُـوتُ وَإِلَـيْكَ الْمَصِيرُ',count:1},
+  {id:'e14',arabic:'أَمْسَيْنَا عَلَى فِطْرَةِ الإسْلاَمِ، وَعَلَى كَلِمَةِ الإِخْلاَصِ، وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ، وَعَلَى مِلَّةِ أَبِينَا إبْرَاهِيمَ حَنِيفاً مُسْلِماً وَمَا كَانَ مِنَ المُشْرِكِينَ',count:1},
+  {id:'e15',arabic:'سُبْحـانَ اللهِ وَبِحَمْـدِهِ عَدَدَ خَلْـقِه، وَرِضـا نَفْسِـه، وَزِنَـةَ عَـرْشِـه، وَمِـدادَ كَلِمـاتِـه',count:3},
+  {id:'e16',arabic:'اللّهُـمَّ عافِـني في بَدَنـي، اللّهُـمَّ عافِـني في سَمْـعي، اللّهُـمَّ عافِـني في بَصَـري، لا إلهَ إلاّ أَنْـتَ',count:3},
+  {id:'e17',arabic:'اللّهُـمَّ إِنّـي أَعـوذُ بِكَ مِنَ الْكُـفر، وَالفَـقْر، وَأَعـوذُ بِكَ مِنْ عَذابِ القَـبْر، لا إلهَ إلاّ أَنْـتَ',count:3},
+  {id:'e18',arabic:'اللّهُـمَّ إِنِّـي أسْـأَلُـكَ العَـفْوَ وَالعـافِـيةَ في الدُّنْـيا وَالآخِـرَة، اللّهُـمَّ إِنِّـي أسْـأَلُـكَ العَـفْوَ وَالعـافِـيةَ في ديني وَدُنْـيايَ وَأهْـلي وَمالـي، اللّهُـمَّ اسْتُـرْ عـوْراتي وَآمِـنْ رَوْعاتـي، اللّهُـمَّ احْفَظْـني مِن بَـينِ يَدَيَّ وَمِن خَلْفـي وَعَن يَمـيني وَعَن شِمـالي، وَمِن فَوْقـي، وَأَعـوذُ بِعَظَمَـتِكَ أَن أُغْـتالَ مِن تَحْتـي',count:1},
+  {id:'e19',arabic:'يَا حَيُّ يَا قيُّومُ بِرَحْمَتِكَ أسْتَغِيثُ أصْلِحْ لِي شَأنِي كُلَّهُ وَلاَ تَكِلْنِي إلَى نَفْسِي طَـرْفَةَ عَيْنٍ',count:3},
+  {id:'e20',arabic:'أَمْسَيْنا وَأَمْسَى الْمُلْكُ للهِ رَبِّ الْعَالَمَيْنِ، اللَّهُمَّ إِنَّي أسْأَلُكَ خَيْرَ هَذَه اللَّيْلَةِ فَتْحَهَا ونَصْرَهَا، ونُوْرَهَا وبَرَكَتهَا، وَهُدَاهَا، وَأَعُوذُ بِكَ مِنْ شَرِّ مَا فيهِا وَشَرَّ مَا بَعْدَهَا',count:1},
+  {id:'e21',arabic:'اللّهُـمَّ عالِـمَ الغَـيْبِ وَالشّـهادَةِ فاطِـرَ السّماواتِ وَالأرْضِ رَبَّ كـلِّ شَـيءٍ وَمَليـكَه، أَشْهَـدُ أَنْ لا إِلـهَ إِلاّ أَنْت، أَعـوذُ بِكَ مِن شَـرِّ نَفْسـي وَمِن شَـرِّ الشَّيْـطانِ وَشِرْكِهِ، وَأَنْ أَقْتَـرِفَ عَلـى نَفْسـي سوءاً أَوْ أَجُـرَّهُ إِلـى مُسْـلِم',count:1},
+  {id:'e22',arabic:'أَعـوذُ بِكَلِمـاتِ اللّهِ التّـامّـاتِ مِنْ شَـرِّ ما خَلَـق',count:3},
+  {id:'e23',arabic:'اللَّهُمَّ صَلِّ وَسَلِّمْ وَبَارِكْ على نَبِيِّنَا مُحمَّد',count:10,reward:'من صلى عليَّ حين يصبح وحين يمسى أدركته شفاعتي يوم القيامة'},
+  {id:'e24',arabic:'اللَّهُمَّ إِنَّا نَعُوذُ بِكَ مِنْ أَنْ نُشْرِكَ بِكَ شَيْئًا نَعْلَمُهُ، وَنَسْتَغْفِرُكَ لِمَا لَا نَعْلَمُهُ',count:3},
+  {id:'e25',arabic:'اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ الْهَمِّ وَالْحَزَنِ، وَأَعُوذُ بِكَ مِنْ الْعَجْزِ وَالْكَسَلِ، وَأَعُوذُ بِكَ مِنْ الْجُبْنِ وَالْبُخْلِ، وَأَعُوذُ بِكَ مِنْ غَلَبَةِ الدَّيْنِ، وَقَهْرِ الرِّجَالِ',count:3},
+  {id:'e26',arabic:'أسْتَغْفِرُ اللهَ العَظِيمَ الَّذِي لاَ إلَهَ إلاَّ هُوَ، الحَيُّ القَيُّومُ، وَأتُوبُ إلَيهِ',count:3},
+  {id:'e27',arabic:'يَا رَبِّ، لَكَ الْحَمْدُ كَمَا يَنْبَغِي لِجَلَالِ وَجْهِكَ، وَلِعَظِيمِ سُلْطَانِكَ',count:3},
+  {id:'e28',arabic:'لَا إلَه إلّا اللهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءِ قَدِيرِ',count:100,reward:'كانت له عدل عشر رقاب، وكتبت له مئة حسنة، ومحيت عنه مئة سيئة'},
+  {id:'e29',arabic:'اللَّهُمَّ أَنْتَ رَبِّي لا إِلَهَ إِلا أَنْتَ، عَلَيْكَ تَوَكَّلْتُ، وَأَنْتَ رَبُّ الْعَرْشِ الْعَظِيمِ، مَا شَاءَ اللَّهُ كَانَ، وَمَا لَمْ يَشَأْ لَمْ يَكُنْ، وَلا حَوْلَ وَلا قُوَّةَ إِلا بِاللَّهِ الْعَلِيِّ الْعَظِيمِ، أَعْلَمُ أَنَّ اللَّهَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، وَأَنَّ اللَّهَ قَدْ أَحَاطَ بِكُلِّ شَيْءٍ عِلْمًا، اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ شَرِّ نَفْسِي، وَمِنْ شَرِّ كُلِّ دَابَّةٍ أَنْتَ آخِذٌ بِنَاصِيَتِهَا، إِنَّ رَبِّي عَلَى صِرَاطٍ مُسْتَقِيمٍ',count:1,reward:'ذكر طيب'},
+  {id:'e30',arabic:'سُبْحـانَ اللهِ وَبِحَمْـدِهِ',count:100,reward:'حُطَّتْ خَطَايَاهُ وَإِنْ كَانَتْ مِثْلَ زَبَدِ الْبَحْرِ'}
+];
+
+const MAJOR_SINS = [
+  {id:1,name:'الشرك بالله',sev:'critical'},
+  {id:2,name:'الرياء في الصلاة',sev:'critical'},
+  {id:3,name:'الصدقة والرياء',sev:'high'},
+  {id:4,name:'عقوق الوالدين (أذية الوالدين)',sev:'critical'},
+  {id:5,name:'شرب الخمر',sev:'critical'},
+  {id:6,name:'السحر',sev:'critical'},
+  {id:7,name:'الزنا',sev:'critical'},
+  {id:8,name:'السرقة',sev:'high'},
+  {id:9,name:'أذية الناس',sev:'high'},
+  {id:10,name:'القتل',sev:'critical'},
+  {id:11,name:'ترك الصلاة',sev:'critical'},
+  {id:12,name:'ترك الزكاة',sev:'critical'},
+  {id:13,name:'إفطار يوم في رمضان عمداً بدون عذر',sev:'critical'},
+  {id:14,name:'الكذب',sev:'high'},
+  {id:15,name:'الغيبة',sev:'high'},
+  {id:16,name:'الذهاب للمشعوذين والأبراج',sev:'critical'},
+  {id:17,name:'قطع الرحم (الأقارب)',sev:'critical'},
+  {id:18,name:'النميمة (نقل الكلام)',sev:'high'},
+  {id:19,name:'المنّ (مساعدة الناس والمن عليهم)',sev:'medium'},
+  {id:20,name:'الرجال المتشبهين بالنساء',sev:'high'},
+  {id:21,name:'اليمين الغموس',sev:'high'},
+  {id:22,name:'الكذب على الله',sev:'critical'},
+  {id:23,name:'القول الزور',sev:'high'},
+  {id:24,name:'اللواط',sev:'critical'},
+  {id:25,name:'ترك صلاة الجمعة',sev:'critical'},
+  {id:26,name:'سب الصحابة',sev:'critical'},
+  {id:27,name:'لعب القمار',sev:'high'},
+  {id:28,name:'قذف المحصنات',sev:'critical'},
+  {id:29,name:'أكل مال اليتيم',sev:'critical'},
+  {id:30,name:'إنقاص الميزان',sev:'high'},
+  {id:31,name:'الظلم',sev:'critical'},
+  {id:32,name:'أكل الحرام',sev:'high'},
+  {id:33,name:'الربا',sev:'critical'},
+  {id:34,name:'التألي على الله',sev:'critical'},
+  {id:35,name:'الذبح لغير الله',sev:'critical'},
+  {id:36,name:'تغيير مقاس الأرض',sev:'medium'},
+  {id:37,name:'الوشم',sev:'medium'},
+  {id:38,name:'عدم التنزه من البول',sev:'medium'},
+  {id:39,name:'عدم إعطاء أجرة الأجير',sev:'high'},
+  {id:40,name:'التبرج',sev:'high'},
+  {id:41,name:'الإتيان في الدبر',sev:'critical'},
+  {id:42,name:'الدعوة للضلال',sev:'critical'},
+  {id:43,name:'عدم إرجاع الدين',sev:'high'},
+  {id:44,name:'الفرار من الزحف',sev:'critical'},
+  {id:45,name:'الرشوة (الراشي والمرتشي)',sev:'critical'},
+  {id:46,name:'محاربة أولياء الله',sev:'critical'},
+  {id:47,name:'الأمن من مكر الله (عدم الخوف من الله)',sev:'critical'},
+  {id:48,name:'عدم قراءة الفاتحة في الصلاة',sev:'high'},
+  {id:49,name:'القنوط من رحمة الله (فقدان الأمل)',sev:'critical'},
+  {id:50,name:'سوء الظن بالله',sev:'high'},
+  {id:51,name:'القول على الله بغير علم',sev:'critical'},
+  {id:52,name:'كتم العلم',sev:'high'},
+  {id:53,name:'وطء الحائض',sev:'medium'},
+  {id:54,name:'التشاؤم',sev:'medium'},
+  {id:55,name:'تحريم الحلال وتحليل الحرام',sev:'critical'},
+  {id:56,name:'عدم الوفاء بالعهد',sev:'high'},
+  {id:57,name:'قتال المسلمين',sev:'critical'},
+  {id:58,name:'تتبع عورات المسلمين',sev:'high'},
+  {id:59,name:'البخل',sev:'medium'},
+  {id:60,name:'اليأس من روح الله',sev:'critical'},
+  {id:61,name:'الحسد (تمني زوال النعمة)',sev:'high'},
+  {id:62,name:'المجاهرة بالمعصية',sev:'high'},
+  {id:63,name:'الكبر والخيلاء',sev:'high'},
+  {id:64,name:'الانتساب لغير أبيه',sev:'high'},
+  {id:65,name:'اللعان (سب الدين)',sev:'critical'},
+  {id:66,name:'الكاذب في المنام',sev:'high'},
+  {id:67,name:'رماية ما فيه الروح',sev:'medium'},
+  {id:68,name:'يحمل حديدة على أخيه المسلم',sev:'high'},
+  {id:69,name:'الطعن بالأنساب',sev:'medium'},
+  {id:70,name:'قطع الطريق',sev:'critical'},
+  {id:71,name:'الديوث',sev:'critical'},
+  {id:72,name:'تغيير خلقة الله',sev:'high'}
+];
+
+const SOLUTIONS = [
+  {icon:'👑',text:'تاج الذكر: لا إله إلا الله ١٠٠ مرة صبح وليل'},
+  {icon:'📖',text:'قراءة آية الكرسي بعد كل صلاة'},
+  {icon:'🤲',text:'التوبة الصادقة الخالصة إلى الله'},
+  {icon:'💚',text:'صدق النية في كل عمل'},
+  {icon:'🌟',text:'إلزم الاستغفار في كل وقت'},
+  {icon:'📕',text:'قراءة جزء من القرآن الكريم يومياً'},
+  {icon:'🕌',text:'صلاة التسابيح'},
+  {icon:'🕋',text:'الصلاة الخمس في المسجد - مهم جداً'}
+];
+
+const PRAYERS = [
+  {key:'fajr',name:'الفجر',emoji:'🌄',time:'قبل الشروق'},
+  {key:'dhuhr',name:'الظهر',emoji:'☀️',time:'بعد الزوال'},
+  {key:'asr',name:'العصر',emoji:'🌤',time:'العصر'},
+  {key:'maghrib',name:'المغرب',emoji:'🌇',time:'بعد الغروب'},
+  {key:'isha',name:'العشاء',emoji:'🌙',time:'بعد العشاء'},
+  {key:'juma',name:'الجمعة',emoji:'🕌',time:'يوم الجمعة'}
+];
+
+// ============================================================
+// STATE
+// ============================================================
+const KEY = 'islamic_app_v2';
+
+function todayStr(){
+  return new Date().toLocaleDateString('ar-EG');
+}
+
+function defaultState(){
+  return {
+    morningProg:{},eveningProg:{},
+    prayers:{fajr:false,dhuhr:false,asr:false,maghrib:false,isha:false,juma:false},
+    quranPages:0,
+    totalPoints:0,todayPoints:0,
+    lastDate:todayStr()
+  };
+}
+
+function loadState(){
+  try{
+    const s=JSON.parse(localStorage.getItem(KEY)||'null');
+    if(!s)return defaultState();
+    if(s.lastDate!==todayStr()){
+      return{...s,morningProg:{},eveningProg:{},prayers:{fajr:false,dhuhr:false,asr:false,maghrib:false,isha:false,juma:false},quranPages:0,todayPoints:0,lastDate:todayStr()};
+    }
+    return s;
+  }catch{return defaultState();}
+}
+
+let ST=loadState();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(ST));}catch{}}
+
+function addPoints(n){ST.totalPoints+=n;ST.todayPoints+=n;save();}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+let currentPage='home';
+function goPage(p){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelector('[data-page="'+p+'"]').classList.add('active');
+  currentPage=p;
+  renderPage(p);
+  window.scrollTo(0,0);
+}
+
+function renderPage(p){
+  if(p==='home')renderHome();
+  else if(p==='adhkar')renderAdhkar();
+  else if(p==='sins')renderSins();
+  else if(p==='points')renderPoints();
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function greeting(){
+  const h=new Date().getHours();
+  if(h<6)return{text:'ليلة مباركة',emoji:'🌙'};
+  if(h<12)return{text:'صباح الخير',emoji:'🌅'};
+  if(h<17)return{text:'نهارك مبارك',emoji:'☀️'};
+  if(h<20)return{text:'مساء الخير',emoji:'🌇'};
+  return{text:'ليلة طيبة',emoji:'🌙'};
+}
+
+function arabicDate(){
+  return new Date().toLocaleDateString('ar-EG',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
+
+function getLevelInfo(pts){
+  if(pts<100)return{level:1,name:'مبتدئ',next:100,emoji:'🌱'};
+  if(pts<300)return{level:2,name:'ذاكر',next:300,emoji:'📿'};
+  if(pts<700)return{level:3,name:'محافظ',next:700,emoji:'🌟'};
+  if(pts<1500)return{level:4,name:'متقدم',next:1500,emoji:'🔱'};
+  if(pts<3000)return{level:5,name:'مجاهد',next:3000,emoji:'⚔️'};
+  return{level:6,name:'رباني',next:Infinity,emoji:'👑'};
+}
+
+function progPct(done,total){return Math.min(Math.round((done/total)*100),100);}
+
+function mDone(id){return ST.morningProg[id]||0;}
+function eDone(id){return ST.eveningProg[id]||0;}
+
+function mComplete(){return MORNING_ADHKAR.filter(d=>mDone(d.id)>=d.count).length;}
+function eComplete(){return EVENING_ADHKAR.filter(d=>eDone(d.id)>=d.count).length;}
+
+// ============================================================
+// HOME PAGE
+// ============================================================
+function renderHome(){
+  const g=greeting();
+  const mc=mComplete(), ec=eComplete();
+  const mt=MORNING_ADHKAR.length, et=EVENING_ADHKAR.length;
+  const prayersDone=Object.values(ST.prayers).filter(Boolean).length;
+  const li=getLevelInfo(ST.totalPoints);
+
+  const goals=[
+    {label:'أذكار الصباح',done:mc,total:mt,emoji:'🌅',page:'adhkar'},
+    {label:'أذكار المساء',done:ec,total:et,emoji:'🌙',page:'adhkar'},
+    {label:'الصلوات',done:prayersDone,total:5,emoji:'🕌',page:'points'},
+    {label:'صفحات القرآن',done:ST.quranPages,total:20,emoji:'📖',page:'points'},
+  ];
+
+  document.getElementById('page-home').innerHTML=`
+    <div class="hero grad">
+      <div class="hero-bg-text">بسم</div>
+      <div class="hero-content">
+        <div class="hero-greeting">${g.emoji} ${g.text}</div>
+        <div class="hero-date">${arabicDate()}</div>
+        <div class="hero-points-box">
+          <div class="hero-points-num">${ST.totalPoints.toLocaleString('ar-EG')}</div>
+          <div class="hero-points-lbl">نقطة إجمالية ${li.emoji} ${li.name}</div>
+          ${ST.todayPoints>0?`<div class="hero-today">+${ST.todayPoints} اليوم</div>`:''}
+        </div>
+      </div>
+    </div>
+    <div class="bismillah-box">
+      <div class="bismillah-text">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+      <div class="bismillah-sub">ابدأ يومك بذكر الله</div>
+    </div>
+    <div style="font-size:.95rem;font-weight:700;margin-bottom:.7rem">أهداف اليوم</div>
+    <div class="goals-grid">
+      ${goals.map(g=>{
+        const pct=progPct(g.done,g.total);
+        const isDone=g.done>=g.total;
+        return`<div class="goal-card ${isDone?'done-card':''}" onclick="goPage('${g.page}')">
+          <div class="goal-emoji">${g.emoji}</div>
+          <div class="goal-title">${g.label}</div>
+          <div class="goal-meta">${g.done} / ${g.total} ${isDone?'<span class="goal-done-badge">✓ مكتمل</span>':''}</div>
+          <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="font-size:.95rem;font-weight:700;margin-bottom:.7rem">الأقسام</div>
+    <div class="sections-list">
+      <button class="section-btn" onclick="goPage('adhkar')">
+        <div class="section-emoji">📿</div>
+        <div class="section-info">
+          <div class="section-title">الأذكار اليومية</div>
+          <div class="section-sub">أذكار الصباح والمساء</div>
+        </div>
+        <div class="section-arrow">‹</div>
+      </button>
+      <button class="section-btn" onclick="goPage('sins')">
+        <div class="section-emoji">⚠️</div>
+        <div class="section-info">
+          <div class="section-title">الكبائر والحل</div>
+          <div class="section-sub">تعرف على الكبائر وطريق التوبة</div>
+        </div>
+        <div class="section-arrow">‹</div>
+      </button>
+      <button class="section-btn" onclick="goPage('points')">
+        <div class="section-emoji">⭐</div>
+        <div class="section-info">
+          <div class="section-title">نقاطي وإنجازاتي</div>
+          <div class="section-sub">تتبع عبادتك اليومية</div>
+        </div>
+        <div class="section-arrow">‹</div>
+      </button>
+    </div>
+    <div class="hadith-box">
+      <div class="hadith-label">حديث نبوي شريف</div>
+      <div class="hadith-text">"مَنْ قَالَ لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ مِائَةَ مَرَّةٍ فِي يَوْمٍ، كَانَتْ لَهُ عَدْلَ عَشْرِ رِقَابٍ"</div>
+      <div class="hadith-source">رواه البخاري ومسلم</div>
+    </div>
+  `;
+}
+
+// ============================================================
+// ADHKAR PAGE
+// ============================================================
+let adhkarTab='morning';
+
+function renderAdhkar(){
+  const mc=mComplete(), ec=eComplete();
+  const mt=MORNING_ADHKAR.length, et=EVENING_ADHKAR.length;
+  const mPct=progPct(mc,mt), ePct=progPct(ec,et);
+
+  const list=adhkarTab==='morning'?MORNING_ADHKAR:EVENING_ADHKAR;
+  const done=adhkarTab==='morning'?mc:ec;
+  const total=adhkarTab==='morning'?mt:et;
+  const pct=adhkarTab==='morning'?mPct:ePct;
+
+  const isAllDone=done>=total;
+
+  const cards=list.map(d=>{
+    const prog=adhkarTab==='morning'?mDone(d.id):eDone(d.id);
+    const isDone=prog>=d.count;
+    const p=progPct(prog,d.count);
+    return`<div class="dhikr-card ${isDone?'done':''}">
+      <div class="dhikr-body">
+        <div class="dhikr-text">
+          ${d.source?`<span class="dhikr-source">${d.source}</span>`:''}
+          <div class="dhikr-arabic">${d.arabic}</div>
+          ${d.reward?`<div class="dhikr-reward"><span>الفضل: </span>${d.reward}</div>`:''}
+        </div>
+        <div class="dhikr-ctrl">
+          <button class="count-btn" onclick="countDhikr('${d.id}',${d.count})" ${isDone?'disabled':''}>
+            ${isDone?'✓':'+'}
+          </button>
+          <div class="count-num">${prog}</div>
+          <div class="count-target">من ${d.count}</div>
+        </div>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${p}%"></div></div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('page-adhkar').innerHTML=`
+    <div class="page-title">الأذكار اليومية</div>
+    <div class="page-sub">حصن نفسك كل يوم بالأذكار</div>
+    <div class="tabs">
+      <button class="tab-btn ${adhkarTab==='morning'?'active':''}" onclick="switchAdhkarTab('morning')">
+        🌅 الصباح (${mc}/${mt})
+      </button>
+      <button class="tab-btn ${adhkarTab==='evening'?'active':''}" onclick="switchAdhkarTab('evening')">
+        🌙 المساء (${ec}/${et})
+      </button>
+    </div>
+    <div class="prog-bar" style="margin-bottom:1rem;height:8px">
+      <div class="prog-fill" style="width:${pct}%"></div>
+    </div>
+    <div class="adhkar-meta">
+      <span class="adhkar-meta-text">${done} من ${total} ذكر مكتمل</span>
+      ${isAllDone
+        ?`<span class="done-badge">مكتمل ✓</span>`
+        :`<button class="reset-link" onclick="resetAdhkar()">إعادة ضبط</button>`
+      }
+    </div>
+    <div class="completed-msg ${isAllDone?'show':''}">
+      <div class="completed-emoji">🎉</div>
+      <div class="completed-title">أحسنت! أتممت ${adhkarTab==='morning'?'أذكار الصباح':'أذكار المساء'}</div>
+      <div class="completed-sub">جزاك الله خيراً وبارك فيك</div>
+    </div>
+    ${cards}
+  `;
+}
+
+function switchAdhkarTab(t){adhkarTab=t;renderAdhkar();}
+
+function countDhikr(id,target){
+  if(adhkarTab==='morning'){
+    const curr=ST.morningProg[id]||0;
+    if(curr>=target)return;
+    ST.morningProg[id]=(curr+1);
+    addPoints(curr+1===target?5:1);
+  }else{
+    const curr=ST.eveningProg[id]||0;
+    if(curr>=target)return;
+    ST.eveningProg[id]=(curr+1);
+    addPoints(curr+1===target?5:1);
+  }
+  renderAdhkar();
+}
+
+function resetAdhkar(){
+  if(adhkarTab==='morning'){ST.morningProg={};}
+  else{ST.eveningProg={};}
+  save();
+  renderAdhkar();
+}
+
+// ============================================================
+// SINS PAGE
+// ============================================================
+let sinsTab='sins';
+let sinsFilter='all';
+
+function renderSins(){
+  const sevLabel={critical:{label:'بالغ الخطورة',cls:'critical'},high:{label:'خطير',cls:'high'},medium:{label:'محذور',cls:'medium'}};
+  const counts={critical:MAJOR_SINS.filter(s=>s.sev==='critical').length,high:MAJOR_SINS.filter(s=>s.sev==='high').length,medium:MAJOR_SINS.filter(s=>s.sev==='medium').length};
+  const filtered=sinsFilter==='all'?MAJOR_SINS:MAJOR_SINS.filter(s=>s.sev===sinsFilter);
+
+  const sinsList=filtered.map(s=>`
+    <div class="sin-item ${s.sev}">
+      <div class="sin-num">${s.id}</div>
+      <div class="sin-name">${s.name}</div>
+      <span class="sin-sev ${s.sev}">${sevLabel[s.sev].label}</span>
+    </div>
+  `).join('');
+
+  const solList=SOLUTIONS.map(sol=>`
+    <div class="sol-card">
+      <div class="sol-icon">${sol.icon}</div>
+      <div class="sol-text">${sol.text}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('page-sins').innerHTML=`
+    <div class="page-title">الكبائر والتوبة</div>
+    <div class="page-sub">تعرف على الكبائر لتتجنبها، وتعلم طريق التوبة</div>
+    <div class="tabs">
+      <button class="tab-btn ${sinsTab==='sins'?'active':''}" onclick="switchSinsTab('sins')">الكبائر (${MAJOR_SINS.length})</button>
+      <button class="tab-btn ${sinsTab==='solutions'?'active':''}" onclick="switchSinsTab('solutions')">طريق الحل</button>
+    </div>
+    <div id="sins-content">
+      ${sinsTab==='sins'?`
+        <div class="filter-bar">
+          <button class="filter-btn ${sinsFilter==='all'?'active':''}" onclick="setSinsFilter('all')">الكل (${MAJOR_SINS.length})</button>
+          <button class="filter-btn ${sinsFilter==='critical'?'active':''}" onclick="setSinsFilter('critical')">بالغ الخطورة (${counts.critical})</button>
+          <button class="filter-btn ${sinsFilter==='high'?'active':''}" onclick="setSinsFilter('high')">خطير (${counts.high})</button>
+          <button class="filter-btn ${sinsFilter==='medium'?'active':''}" onclick="setSinsFilter('medium')">محذور (${counts.medium})</button>
+        </div>
+        <div class="sins-list">${sinsList}</div>
+        <div class="shaytan-note">
+          المستفيد الوحيد من هذه الذنوب = الشيطان عليه لعنة الله
+          <div class="shaytan-sub">تذكر: باب التوبة مفتوح، والله يغفر الذنوب جميعاً</div>
+        </div>
+      `:`
+        <div class="hero grad" style="border-radius:var(--radius);padding:1.1rem;text-align:center;margin-bottom:.9rem">
+          <div style="font-size:1.1rem;font-weight:700;margin-bottom:.3rem">طريق العودة إلى الله</div>
+          <div style="font-size:.82rem;opacity:.85">لا تيأس من رحمة الله، فالتوبة الصادقة تمحو كل ذنب</div>
+        </div>
+        ${solList}
+        <div class="tawba-steps">
+          <div class="tawba-title">شروط التوبة الصحيحة</div>
+          <div class="tawba-step"><div class="step-num">١</div><div class="step-text">الإقلاع عن الذنب فوراً</div></div>
+          <div class="tawba-step"><div class="step-num">٢</div><div class="step-text">الندم الحقيقي على ما فات</div></div>
+          <div class="tawba-step"><div class="step-num">٣</div><div class="step-text">العزم على عدم العودة</div></div>
+          <div class="tawba-step"><div class="step-num">٤</div><div class="step-text">رد الحقوق إلى أصحابها إن كان الذنب يتعلق بحق الناس</div></div>
+        </div>
+        <div class="aya-box">
+          <div class="aya-text">قَالَ تَعَالَى: "إِنَّ اللَّهَ يَغْفِرُ الذُّنُوبَ جَمِيعًا ۚ إِنَّهُ هُوَ الْغَفُورُ الرَّحِيمُ"</div>
+          <div class="aya-ref">سورة الزمر - آية 53</div>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+function switchSinsTab(t){sinsTab=t;renderSins();}
+function setSinsFilter(f){sinsFilter=f;renderSins();}
+
+// ============================================================
+// POINTS PAGE
+// ============================================================
+function renderPoints(){
+  const li=getLevelInfo(ST.totalPoints);
+  const nextPts=li.next===Infinity?ST.totalPoints:li.next;
+  const levelPct=li.next===Infinity?100:Math.min(Math.round((ST.totalPoints/nextPts)*100),100);
+  const prayersDone=Object.values(ST.prayers).filter(Boolean).length;
+  const prayerPts=prayersDone*10;
+  const quranPts=ST.quranPages*3;
+  const mc=mComplete(), ec=eComplete();
+  const mt=MORNING_ADHKAR.length, et=EVENING_ADHKAR.length;
+
+  const prayerBtns=PRAYERS.map(p=>{
+    const checked=ST.prayers[p.key]||false;
+    return`<button class="prayer-btn ${checked?'checked':''}" onclick="togglePrayer('${p.key}')">
+      <div class="prayer-icon-wrap">${checked?'✓':p.emoji}</div>
+      <div>
+        <div class="prayer-name">${p.name}</div>
+        <div class="prayer-time">${p.time}</div>
+      </div>
+    </button>`;
+  }).join('');
+
+  document.getElementById('page-points').innerHTML=`
+    <div class="page-title">نقاطي</div>
+    <div class="page-sub">تابع إنجازاتك اليومية</div>
+
+    <div class="level-box grad">
+      <div class="level-deco">✦</div>
+      <div class="level-deco2">✦</div>
+      <div class="level-emoji">${li.emoji}</div>
+      <div class="level-pts">${ST.totalPoints.toLocaleString('ar-EG')}</div>
+      <div class="level-pts-lbl">نقطة إجمالية</div>
+      <div class="level-name">${li.name}</div>
+      <div class="level-prog-wrap">
+        <div class="level-prog-bar"><div class="level-prog-fill" style="width:${levelPct}%"></div></div>
+        ${li.next!==Infinity?`<div class="level-next">${(li.next-ST.totalPoints).toLocaleString('ar-EG')} نقطة للمستوى التالي</div>`:'<div class="level-next">وصلت للمستوى الأعلى!</div>'}
+      </div>
+    </div>
+
+    <div class="tab-summary">
+      <div class="summary-card">
+        <div class="summary-num">${ST.todayPoints}</div>
+        <div class="summary-lbl">نقاط اليوم</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-num">${prayersDone}</div>
+        <div class="summary-lbl">صلوات اليوم</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-num">${ST.quranPages}</div>
+        <div class="summary-lbl">صفحات القرآن</div>
+      </div>
+    </div>
+
+    <div class="prog-tabs-summary">
+      <div class="prog-tabs-title">الأذكار</div>
+      <div class="prog-row">
+        <div class="prog-row-label">🌅 الصباح</div>
+        <div class="prog-row-bar"><div class="prog-row-fill" style="width:${progPct(mc,mt)}%"></div></div>
+        <div class="prog-row-meta">${mc}/${mt}</div>
+      </div>
+      <div class="prog-row">
+        <div class="prog-row-label">🌙 المساء</div>
+        <div class="prog-row-bar"><div class="prog-row-fill" style="width:${progPct(ec,et)}%"></div></div>
+        <div class="prog-row-meta">${ec}/${et}</div>
+      </div>
+    </div>
+
+    <div class="prayers-card">
+      <div class="prayers-header">
+        <div class="prayers-title">الصلوات (+١٠ نقاط/صلاة)</div>
+        <span class="pts-badge">${prayerPts} نقطة</span>
+      </div>
+      <div class="prayer-grid">${prayerBtns}</div>
+    </div>
+
+    <div class="quran-card">
+      <div class="prayers-header" style="margin-bottom:.5rem">
+        <div class="prayers-title">قراءة القرآن</div>
+        <span class="pts-badge">${quranPts} نقطة</span>
+      </div>
+      <div class="quran-inner">
+        <div>
+          <div class="quran-num">${ST.quranPages}</div>
+          <div class="quran-lbl">صفحة اليوم (+٣ نقاط/صفحة)</div>
+        </div>
+        <button class="add-page-btn" onclick="addQuranPage()">+ صفحة</button>
+      </div>
+      ${ST.quranPages>=20?'<div class="quran-done-msg">أحسنت! أتممت جزءاً كاملاً من القرآن اليوم</div>':''}
+    </div>
+
+    <div class="guide-card">
+      <div class="guide-title">كيف تكسب النقاط؟</div>
+      <div class="guide-row"><div class="guide-left">🕌 كل صلاة</div><span class="pts-badge">+١٠</span></div>
+      <div class="guide-row"><div class="guide-left">📿 ذكر مكتمل</div><span class="pts-badge">+٥</span></div>
+      <div class="guide-row"><div class="guide-left">🔢 كل عدة في الذكر</div><span class="pts-badge">+١</span></div>
+      <div class="guide-row"><div class="guide-left">📖 كل صفحة قرآن</div><span class="pts-badge">+٣</span></div>
+    </div>
+  `;
+}
+
+function togglePrayer(key){
+  const wasDone=ST.prayers[key]||false;
+  ST.prayers[key]=!wasDone;
+  ST.totalPoints+=wasDone?-10:10;
+  ST.todayPoints+=wasDone?-10:10;
+  if(ST.totalPoints<0)ST.totalPoints=0;
+  if(ST.todayPoints<0)ST.todayPoints=0;
+  save();
+  renderPoints();
+}
+
+function addQuranPage(){
+  ST.quranPages++;
+  addPoints(3);
+  renderPoints();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+renderHome();
+</script>
+</body>
+</html>
