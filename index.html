@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -206,13 +206,11 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px
 </head>
 <body>
 
-<!-- Pages -->
 <div id="page-home" class="page active"></div>
 <div id="page-adhkar" class="page"></div>
 <div id="page-sins" class="page"></div>
 <div id="page-points" class="page"></div>
 
-<!-- Bottom Nav -->
 <nav>
   <div class="nav-inner">
     <button class="nav-btn active" data-page="home" onclick="goPage('home')">
@@ -439,7 +437,10 @@ function addPoints(n){ST.totalPoints+=n;ST.todayPoints+=n;save();}
 // NAVIGATION
 // ============================================================
 let currentPage='home';
-function goPage(p){
+function goPage(p, isHistory = false){
+  if (!isHistory && p !== currentPage) {
+    window.history.pushState({ page: p }, "", "");
+  }
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
@@ -673,7 +674,7 @@ let sinsFilter='all';
 
 function renderSins(){
   const sevLabel={critical:{label:'بالغ الخطورة',cls:'critical'},high:{label:'خطير',cls:'high'},medium:{label:'محذور',cls:'medium'}};
-  const counts={critical:MAJOR_SINS.filter(s=>s.sev==='critical').length,high:MAJOR_SINS.filter(s=>s.sev==='high').length,medium:MAJOR_SINS.filter(s=>s.sev==='medium').length};
+  const counts={critical:MAJOR_SINS.filter(s=>s.sev==='critical').length,high:MAJORSINS=MAJOR_SINS.filter(s=>s.sev==='high').length,medium:MAJOR_SINS.filter(s=>s.sev==='medium').length};
   const filtered=sinsFilter==='all'?MAJOR_SINS:MAJOR_SINS.filter(s=>s.sev===sinsFilter);
 
   const sinsList=filtered.map(s=>`
@@ -859,6 +860,14 @@ function addQuranPage(){
 // ============================================================
 // INIT
 // ============================================================
+window.history.replaceState({ page: 'home' }, "", "");
+window.addEventListener('popstate', function(e) {
+  if (e.state && e.state.page) {
+    goPage(e.state.page, true);
+  } else {
+    goPage('home', true);
+  }
+});
 renderHome();
 </script>
 </body>
